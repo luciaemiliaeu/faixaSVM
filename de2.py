@@ -8,46 +8,41 @@ from sklearn.svm import SVC
 from sklearn import datasets
 
 def plane(xx, w):
+	print("D: ", xx.shape)
+	print("Ws: ", w.shape)
 	aux = []
 	for x in xx:
 		aux.append(sum(w.T*x))
 	return aux
 
-def plot_hyperplane(clf, map_ , XX, linestyle, label):
-	print(label)
+def plot_hyperplane(clf, map_ , linestyle):
+	
 	# get the separating hyperplane
 	w = clf.coef_[0]
 	a = -w[:-1]/w[-1]
 	b = clf.intercept_/w[-1]
-	#z = map_[:,:-1] * a - b
 	z = plane(map_[:,:-1], a) - b
-	
-	# plot the line, the points, and the nearest vectors to the plane
-	ax.plot(map_[:,0], map_[:,1], z, label = label)
 
+	# plot the line, the points, and the nearest vectors to the plane
+	ax.plot(map_[:,:-1], z, 'k-')
 
 
 iris = datasets.load_iris()
-X = iris.data[:,:3]
-kmeans = KMeans(n_clusters=3, random_state=0).fit(X)
-Y = kmeans.labels_
+X = iris.data
+Y = iris.target
 
 attr1_min = X[:,0].min()
 attr1_max = X[:,0].max()
 attr2_min = X[:,1].min()
 attr2_max = X[:,1].max()
-attr3_min = X[:,2].min()
-attr3_max = X[:,2].max()
 
 xx = np.linspace(attr1_min, attr1_max)
 yy = np.linspace(attr2_min, attr2_max)
-zz = np.linspace(attr3_min, attr3_max)
+XX, YY = np.meshgrid(xx,yy)
+map_ = np.c_[XX.ravel(), YY.ravel()]
 
-XX, YY, ZZ = np.meshgrid(xx,yy,zz)
 
-map_ = np.c_[XX.ravel(), YY.ravel(), ZZ.ravel()]
-
-clf = OneVsRestClassifier(SVC(kernel='linear'))
+clf = OneVsRestClassifier(SVC(gamma=.5, C=0.1))
 
 clf.fit(X,Y)
 
@@ -64,10 +59,6 @@ for y, c in zip(np.unique(Y), colors):
 
 ax.scatter(clf.estimators_[0].support_vectors_[:,0], clf.estimators_[0].support_vectors_[:,1],clf.estimators_[0].support_vectors_[:,2],
 	s=100, edgecolors='k',linewidths=2, facecolors='none')
-
-titulos = ["Boundary for cluster 1", "Boundary for cluster 2", "Boundary for cluster 3"]
-for c, label  in zip(clf.estimators_, titulos):
-	plot_hyperplane(c,map_, XX, 'k--', label)
 
 ax.legend()
 plt.show()
